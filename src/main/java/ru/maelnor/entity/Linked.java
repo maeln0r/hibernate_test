@@ -28,9 +28,11 @@ public class Linked {
     /**
      * Конструктор, используемый в HQL запросе
      */
-    public Linked(Integer goodId, Integer userId) {
-        this.linkedKey.setGoodId(goodId);
-        this.linkedKey.setUserId(userId);
+    public Linked(Good good, User user) {
+        this.good = good;
+        this.user = user;
+        this.linkedKey.setGoodId(good.getId());
+        this.linkedKey.setUserId(user.getId());
     }
 
     @Getter

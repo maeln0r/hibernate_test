@@ -7,9 +7,12 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import ru.maelnor.entity.Good;
 import ru.maelnor.entity.Linked;
+import ru.maelnor.entity.User;
 
 import java.util.List;
+import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
@@ -30,14 +33,15 @@ public class Main {
             transaction = session.beginTransaction();
 
             List<Linked> linkedPurchases = session.createQuery(
-                            "select new ru.maelnor.entity.Linked(c.id, s.id) " +
-                                    "from Purchase pl " +
-                                    "join Good c on pl.goodName = c.name " +
-                                    "join User s on pl.userName = s.name", Linked.class)
-                    .getResultList();
+                            "select new map(g as good, u as user) " +
+                                    "from Purchase p " +
+                                    "join Good g on p.goodName = g.name " +
+                                    "join User u on p.userName = u.name", Map.class)
+                    .getResultStream()
+                    .map(map -> new Linked((Good) map.get("good"), (User) map.get("user")))
+                    .toList();
 
 
-            // Сохраняем все объекты LinkedPurchaseList
             linkedPurchases.forEach(session::persist);
 
             transaction.commit();
