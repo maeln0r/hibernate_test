@@ -3,16 +3,10 @@ package ru.maelnor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import ru.maelnor.entity.Good;
+import org.hibernate.cfg.Configuration;
 import ru.maelnor.entity.Linked;
-import ru.maelnor.entity.User;
 
 import java.util.List;
-import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
@@ -20,10 +14,10 @@ public class Main {
     }
 
     private static SessionFactory getSessionFactory() {
-        try (StandardServiceRegistry registry = new StandardServiceRegistryBuilder().configure("hibernate.cfg.xml").build()) {
-            Metadata metadata = new MetadataSources(registry).getMetadataBuilder().build();
-            return metadata.getSessionFactoryBuilder().build();
-        }
+        Configuration configuration = new Configuration();
+        configuration.addAnnotatedClass(Linked.class);
+        configuration.configure();
+        return configuration.buildSessionFactory();
     }
 
     private static void fillLinkedPurchaseList() {
@@ -33,14 +27,11 @@ public class Main {
             transaction = session.beginTransaction();
 
             List<Linked> linkedPurchases = session.createQuery(
-                            "select new map(g as good, u as user) " +
+                            "select new Linked(g, u) " +
                                     "from Purchase p " +
                                     "join Good g on p.goodName = g.name " +
-                                    "join User u on p.userName = u.name", Map.class)
-                    .getResultStream()
-                    .map(map -> new Linked((Good) map.get("good"), (User) map.get("user")))
-                    .toList();
-
+                                    "join User u on p.userName = u.name", Linked.class)
+                    .getResultList();
 
             linkedPurchases.forEach(session::persist);
 
